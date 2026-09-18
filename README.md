@@ -28,7 +28,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File mem0-setup.ps1 -ApiKey "m0-x
 **B. True one-liner** (fetches and runs):
 
 ```powershell
-powershell -NoProfile -Command "irm https://raw.githubusercontent.com/__OWNER__/mem0-opencode-setup/main/mem0-setup.ps1 | iex"
+powershell -NoProfile -Command "irm https://raw.githubusercontent.com/flowergod/mem0-opencode-setup/main/mem0-setup.ps1 | iex"
 ```
 
 _(After step B you still need to pass your key; set it separately with
