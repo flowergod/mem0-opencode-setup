@@ -1,5 +1,7 @@
 # mem0-opencode-setup
 
+**English** | [简体中文](README.zh-CN.md)
+
 One-command installer for a **persistent, cross-device memory system** in
 [opencode](https://opencode.ai), backed by [Mem0](https://mem0.ai).
 
