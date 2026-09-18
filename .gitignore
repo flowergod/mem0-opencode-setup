@@ -1,0 +1,9 @@
+# backups / logs
+mem0-setup-backup/
+*.log
+
+# editor / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
