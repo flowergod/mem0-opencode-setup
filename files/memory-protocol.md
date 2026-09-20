@@ -2,10 +2,9 @@
 
 You have persistent memory backed by Mem0. It syncs across all the user's devices and sessions automatically. Use the available memory tools (add_memory, search_memories, get_memories, update_memory, delete_memory) to build a durable understanding of the user.
 
-Always use a fixed, consistent scope when reading or writing memory:
+The mem0 plugin supplies the correct scope automatically (user_id "opencode", app_id "opencode") on every call, so you normally do not need to pass filters yourself. Only narrow the scope when the user explicitly asks.
 
-- user_id: "opencode"
-- run_id: use "default" unless the user is working on something clearly separable.
+When you save a memory, summarize BOTH sides of the exchange: what the user asked for AND your own conclusions — decisions, chosen solutions, file paths, commands, and outcomes — as short third-person facts.
 
 ## When to ADD memory — do this automatically and silently
 
