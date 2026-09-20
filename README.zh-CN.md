@@ -67,6 +67,8 @@ var __require = import.meta.require;   // dist/index.js
 
 修法只有一行 —— 换成 Node 的 `createRequire(import.meta.url)`，它在 **Node 和 Bun 下都有效**。`files/patch-mem0-plugin.ps1` 会幂等地打上这个补丁，安装器则直接 vendor 一份打好补丁的插件，让 opencode 用绝对路径加载。
 
+**另有一处必须修：** 同一个包在插件工厂里用 opencode 的 `$`（Bun shell）执行 git：`` await $`git branch --show-current`.quiet() ``。当 opencode 作为 **ACP 后端**被嵌入时（Obsidian Copilot / Zed），这个调用**永远不返回** → 工厂不返回 → ACP `session/new` 不响应 → 界面一直卡在 `Loading agent models...`。补丁改成 `node:child_process` 的 `execFileSync`（4 秒超时 + 显式 cwd），并支持用 `MEM0_BRANCH` 覆盖分支名。纯 git 调用改动，**记忆行为不变**。
+
 ## 安装之后
 
 安装器还会在 opencode 里放一个 **skill**（`mem0-opencode-setup`）。重启 opencode 后，可以用自然语言唤起它，例如："用 mem0-opencode-setup 同步/重装这台机器的记忆体系"。
@@ -95,7 +97,7 @@ var __require = import.meta.require;   // dist/index.js
 | `install.ps1` | 安装脚本（幂等；支持 `-DryRun` / `-Verify`） |
 | `SKILL.md` | opencode skill 定义（给 agent 的执行说明） |
 | `files/memory-protocol.md` | 协议指令（教 agent 自动存取） |
-| `files/patch-mem0-plugin.ps1` | Node 兼容补丁（幂等） |
+| `files/patch-mem0-plugin.ps1` | Node 兼容 + ACP Agent 卡死 补丁（幂等） |
 | `files/opencode-mem0.snippet.jsonc` | 手动合并用的配置片段 |
 
 ## 回滚

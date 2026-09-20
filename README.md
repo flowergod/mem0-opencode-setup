@@ -80,6 +80,14 @@ The fix is one line — replace it with Node's `createRequire(import.meta.url)`,
 works on **both** Node and Bun. `files/patch-mem0-plugin.ps1` does this idempotently,
 and the installer vendors the patched plugin so opencode loads it by absolute path.
 
+There is a **second fix**. The same bundle resolves git info inside the plugin factory
+through opencode's `$` (Bun shell): `` await $`git branch --show-current`.quiet() ``. When opencode
+runs as an **ACP backend** (embedded in Obsidian Copilot / Zed) that call never settles,
+so the factory never returns, ACP `session/new` never answers, and the host hangs forever
+on "Loading agent models...". The patch rewrites those calls to `node:child_process`
+`execFileSync` (4 s timeout, explicit cwd) and honours `MEM0_BRANCH`. Pure git shell-out
+change; memory behaviour is unchanged.
+
 ## After install
 
 The installer also drops an opencode **skill** (`mem0-opencode-setup`). Once opencode is
@@ -113,7 +121,7 @@ Same API key + same scope = **shared across devices**.
 | `install.ps1` | The installer (idempotent; supports `-DryRun` / `-Verify`) |
 | `SKILL.md` | opencode skill definition (agent-facing instructions) |
 | `files/memory-protocol.md` | Protocol that tells the agent to auto store/recall |
-| `files/patch-mem0-plugin.ps1` | The Node compatibility patch (idempotent) |
+| `files/patch-mem0-plugin.ps1` | Node compatibility **+ ACP Agent-hang** patches (idempotent) |
 | `files/opencode-mem0.snippet.jsonc` | Config snippet for manual merging |
 
 ## Rollback

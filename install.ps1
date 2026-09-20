@@ -16,6 +16,17 @@
     `createRequire(import.meta.url)` works under BOTH Node and Bun, so we vendor a
     patched copy and make opencode load it by absolute path.
 
+  PATCH 2 - AGENT-HANG FIX
+    The same bundle also shells out to git inside the plugin factory through
+    opencode's $ (Bun shell): `await $`git branch --show-current`.quiet()`.
+    When opencode is spawned as an ACP backend (embedded in Obsidian Copilot or
+    Zed), that $ call never settles, so the factory never returns, ACP
+    `session/new` never answers, and the host sits forever on
+    "Loading agent models...". files/patch-mem0-plugin.ps1 rewrites those calls to
+    node:child_process execFileSync (4 s timeout, explicit cwd) and honours the
+    MEM0_BRANCH env override. Pure git shell-out change; memory behaviour is
+    identical.
+
   STEP 0 (before everything) RECONCILES THE MACHINE
     - detects & removes OTHER mem0 integrations (Claude / Codex / Cursor / Windsurf / VS Code)
     - removes the OLD opencode setup (mem0 MCP block, npm plugin spec, plugins\mem0-memory.js)
@@ -250,6 +261,9 @@ if ($Verify) {
     if ($t.Contains("__createRequire(import.meta.url)")) { Ok "patch applied (Node-compatible)" }
     elseif ($t.Contains("import.meta.require")) { Warn2 "NOT patched - will fail under the desktop app" }
     else { Info "no Bun require line found (already compatible)" }
+    if ($t.Contains("__execFileSync")) { Ok "git-call patch applied (execFileSync, Agent-tab safe)" }
+    elseif ($t.Contains('$`git ')) { Warn2 "git-call patch NOT applied - may hang the Agent tab (session/new)" }
+    else { Info "no Bun shell git call found" }
     $loadable = Test-PluginLoadable $PluginDir
     if ($loadable -eq $true) { Ok "plugin imports cleanly under Node" }
     elseif ($loadable -eq $false) { Warn2 "plugin failed to import under Node" }

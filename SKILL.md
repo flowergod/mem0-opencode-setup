@@ -28,11 +28,21 @@ var __require = import.meta.require;   // dist/index.js 里的那一行
 本 skill 直接 **vendor 一份打好补丁的插件**到 `~/.config/opencode/mem0-plugin/`，
 并让 opencode 用**绝对路径**加载它（不再依赖 npm 包名）。
 
+## 另一个必须修的坑：工厂里的 git 调用会卡死 ACP 后端
+
+当 opencode 以 **ACP 后端**方式被拉起时（Obsidian Copilot / Zed 内嵌），插件工厂里用
+opencode 的 `$`（Bun shell）执行 git 命令**永远不会返回**，导致工厂不返回、ACP
+`session/new` 不响应，宿主界面一直卡在 `Loading agent models…`。
+
+`files/patch-mem0-plugin.ps1` 会把 `` $`git …` `` 换成 `node:child_process` 的
+`execFileSync`（4 秒超时 + 显式 cwd），并支持用 `MEM0_BRANCH` 直接覆盖分支名。
+这是纯 git 调用改动，**记忆行为不变**（user_id / app_id / recall / save 都不受影响）。
+
 ## 包内容
 
 - `install.ps1` —— 安装脚本（幂等；支持 DryRun / Verify）
 - `files/memory-protocol.md` —— 协议指令（教 agent 自动存取、静默保存）
-- `files/patch-mem0-plugin.ps1` —— 给插件打 Node 兼容补丁（幂等）
+- `files/patch-mem0-plugin.ps1` —— 给插件打补丁：Node 兼容 + 解除工厂 git 死锁（幂等）
 - `files/opencode-mem0.snippet.jsonc` —— 手动合并用的配置片段
 - `mem0-setup.ps1` —— 自包含一键脚本（把整个 skill 内嵌，用于全新机器）
 
